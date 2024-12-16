@@ -18,13 +18,12 @@ def ask_price():
         print(f"Raw Data: {raw_data}")
         print(f"============================\n")
 
-        # Step 1: Force JSON parsing, even if Content-Type is incorrect
-        try:
-            data = request.get_json(force=True)  # force=True parses JSON even if Content-Type is incorrect
+        # Step 1: Force JSON parsing, even if Content-Type is incorrect or missing
+        data = request.get_json(force=True, silent=True)  # force=True allows parsing without Content-Type, silent=True prevents exceptions
+        if data:
             print(f"Parsed JSON Data (from request.get_json): {data}")
-        except Exception as e:
-            print(f"JSON Parsing Error (request.get_json): {e}")
-            data = None
+        else:
+            print(f"request.get_json() failed to parse the request, falling back to raw parsing.")
 
         # Step 2: If JSON parsing failed, manually parse the raw body
         if data is None:
