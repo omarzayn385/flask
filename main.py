@@ -1,14 +1,31 @@
 from flask import Flask, request, jsonify
 import os
+import json
 
 app = Flask(__name__)
 
 @app.route('/ask_price', methods=['POST'])
 def ask_price():
     try:
-        # Force Flask to parse the request body as JSON
-        data = request.get_json(force=True)
+        # Log the incoming request details for debugging
+        raw_data = request.data.decode('utf-8').strip()
+        content_type = request.content_type
+        print(f"Raw Data: {raw_data}")
+        print(f"Content-Type: {content_type}")
         
+        # Try to parse the request as JSON
+        try:
+            data = request.get_json(force=True)
+        except Exception as e:
+            data = None
+
+        # If parsing JSON failed, try to manually parse the raw data
+        if data is None:
+            try:
+                data = json.loads(raw_data)  # Try to load raw data as JSON
+            except Exception as e:
+                return jsonify({"error": "Request body is not valid JSON"}), 400
+
         # Extract owner_price and estimated_value from the JSON payload
         owner_price = data.get('owner_price')
         estimated_value = data.get('estimated_value')
