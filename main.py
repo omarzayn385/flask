@@ -33,7 +33,6 @@ def ask_price():
             try:
                 # Get form data and convert strings to numbers (int or float)
                 data = request.form.to_dict()
-                # Check if form is empty, then try to parse raw_data as JSON
                 if not data:
                     print(f"request.form is empty. Trying to parse raw data as JSON.")
                     data = json.loads(raw_data)
@@ -53,6 +52,9 @@ def ask_price():
                 return jsonify({"error": "Request body is not valid JSON"}), 400
 
         # Step 4: Extract owner_price and estimated_value from the JSON payload
+        if data is None:
+            return jsonify({"error": "Request body is empty"}), 400
+
         owner_price = data.get('owner_price')
         estimated_value = data.get('estimated_value')
 
