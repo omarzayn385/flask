@@ -18,15 +18,27 @@ def ask_price():
         print(f"Raw Data: {raw_data}")
         print(f"============================\n")
 
-        # Step 1: Try to parse the request using request.get_json(force=True)
-        data = request.get_json(force=True, silent=True)  # Silent=True prevents raising errors
-        if data:
-            print(f"Parsed JSON Data (from request.get_json): {data}")
-        else:
-            print(f"request.get_json() failed to parse the request, falling back to manual parsing.")
+        data = None
 
-        # Step 2: If JSON parsing failed, try to load it manually
-        if data is None:
+        # Step 1: Handle JSON content-type correctly
+        if content_type == 'application/json':
+            try:
+                data = request.get_json(force=True, silent=True)
+                print(f"Parsed JSON Data (from request.get_json): {data}")
+            except Exception as e:
+                print(f"JSON Parsing Error (request.get_json): {e}")
+
+        # Step 2: Handle x-www-form-urlencoded
+        if data is None and content_type == 'application/x-www-form-urlencoded':
+            try:
+                # Get form data
+                data = request.form.to_dict()
+                print(f"Parsed Form Data (from request.form): {data}")
+            except Exception as e:
+                print(f"Form Data Parsing Error: {e}")
+        
+        # Step 3: Fallback - handle raw data (this also works for text/plain)
+        if data is None and raw_data:
             try:
                 data = json.loads(raw_data)  # Manually parse raw data as JSON
                 print(f"Manually Parsed Data: {data}")
@@ -34,11 +46,11 @@ def ask_price():
                 print(f"Manual Parsing Error: {e}")
                 return jsonify({"error": "Request body is not valid JSON"}), 400
 
-        # Step 3: Extract owner_price and estimated_value from the JSON payload
+        # Step 4: Extract owner_price and estimated_value from the JSON payload
         owner_price = data.get('owner_price')
         estimated_value = data.get('estimated_value')
 
-        # Step 4: Validate the inputs
+        # Step 5: Validate the inputs
         if owner_price is None or estimated_value is None:
             print(f"Missing owner_price or estimated_value in request body.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
@@ -47,7 +59,7 @@ def ask_price():
             print(f"Invalid data types for owner_price or estimated_value.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' must be numbers."}), 400
 
-        # Step 5: Determine whether to accept or not
+        # Step 6: Determine whether to accept or not
         if owner_price > estimated_value:
             return jsonify({"result": "don't accept"})
         else:
