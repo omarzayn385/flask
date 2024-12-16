@@ -33,7 +33,12 @@ def ask_price():
             try:
                 # Get form data and convert strings to numbers (int or float)
                 data = request.form.to_dict()
-                data = {key: int(value) if value.isdigit() else float(value) for key, value in data.items()}
+                # Check if form is empty, then try to parse raw_data as JSON
+                if not data:
+                    print(f"request.form is empty. Trying to parse raw data as JSON.")
+                    data = json.loads(raw_data)
+                else:
+                    data = {key: int(value) if value.isdigit() else float(value) for key, value in data.items()}
                 print(f"Parsed Form Data (from request.form): {data}")
             except Exception as e:
                 print(f"Form Data Parsing Error: {e}")
