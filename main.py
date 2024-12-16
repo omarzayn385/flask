@@ -27,8 +27,8 @@ def ask_price():
                 return jsonify({"error": "Request body is not valid JSON"}), 400
 
         # Extract owner_price and estimated_value from the JSON payload
-        owner_price = data.get('owner_price')
-        estimated_value = data.get('estimated_value')
+        owner_price = data.get("owner_price")
+        estimated_value = data.get("estimated_value")
         
         # Validate the inputs
         if owner_price is None or estimated_value is None:
