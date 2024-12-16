@@ -6,8 +6,8 @@ app = Flask(__name__)
 @app.route('/ask_price', methods=['POST'])
 def ask_price():
     try:
-        # Get the JSON data from the POST request
-        data = request.get_json()
+        # Force Flask to parse the request body as JSON
+        data = request.get_json(force=True)
         
         # Extract owner_price and estimated_value from the JSON payload
         owner_price = data.get('owner_price')
