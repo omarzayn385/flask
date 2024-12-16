@@ -11,28 +11,30 @@ def ask_price():
         content_type = request.content_type
         headers = dict(request.headers)
 
-        # Try to get raw_data from request.data
+        # Step 2: Force raw_data from WSGI input, even if request.form consumes it
         try:
-            raw_data = request.data.decode('utf-8').strip()
+            raw_data = request.environ['wsgi.input'].read(int(request.environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
         except Exception as e:
             raw_data = ''
+            print(f"WSGI Input Read Error: {e}")
 
+        # Step 3: Fallback to request.data if raw_data is still empty
         if not raw_data:
             try:
-                # Fallback to read raw data from WSGI input stream
-                raw_data = request.environ['wsgi.input'].read(int(request.environ.get('CONTENT_LENGTH', 0))).decode('utf-8')
+                raw_data = request.data.decode('utf-8').strip()
             except Exception as e:
+                print(f"request.data decoding error: {e}")
                 raw_data = ''
 
         print(f"\n===== INCOMING REQUEST =====")
         print(f"Content-Type: {content_type}")
         print(f"Headers: {headers}")
-        print(f"Raw Data: {raw_data}")
+        print(f"Raw Data from WSGI: {raw_data}")
         print(f"============================\n")
 
         data = None
 
-        # Step 2: Handle JSON content-type correctly
+        # Step 4: Handle application/json Content-Type
         if content_type == 'application/json':
             try:
                 data = request.get_json(force=True, silent=True)
@@ -40,7 +42,7 @@ def ask_price():
             except Exception as e:
                 print(f"JSON Parsing Error (request.get_json): {e}")
 
-        # Step 3: Handle x-www-form-urlencoded
+        # Step 5: Handle x-www-form-urlencoded
         if data is None and content_type == 'application/x-www-form-urlencoded':
             try:
                 # Get form data
@@ -54,7 +56,7 @@ def ask_price():
             except Exception as e:
                 print(f"Form Data Parsing Error: {e}")
         
-        # Step 4: Fallback - handle raw data (for when Content-Type is missing or not recognized)
+        # Step 6: Fallback - handle raw data if Content-Type is text/plain, or if no Content-Type is provided
         if data is None and raw_data:
             try:
                 data = json.loads(raw_data)  # Manually parse raw data as JSON
@@ -63,14 +65,14 @@ def ask_price():
                 print(f"Manual Parsing Error: {e}")
                 return jsonify({"error": "Request body is not valid JSON"}), 400
 
-        # Step 5: Extract owner_price and estimated_value from the JSON payload
+        # Step 7: Extract owner_price and estimated_value from the JSON payload
         if data is None:
             return jsonify({"error": "Request body is empty"}), 400
 
         owner_price = data.get('owner_price')
         estimated_value = data.get('estimated_value')
 
-        # Step 6: Validate the inputs
+        # Step 8: Validate the inputs
         if owner_price is None or estimated_value is None:
             print(f"Missing owner_price or estimated_value in request body.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
@@ -79,7 +81,7 @@ def ask_price():
             print(f"Invalid data types for owner_price or estimated_value.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' must be numbers."}), 400
 
-        # Step 7: Determine whether to accept or not
+        # Step 9: Determine whether to accept or not
         if owner_price > estimated_value:
             return jsonify({"result": "don't accept"})
         else:
