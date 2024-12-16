@@ -7,27 +7,26 @@ app = Flask(__name__)
 @app.route('/ask_price', methods=['POST'])
 def ask_price():
     try:
-        # Log the incoming request details for debugging
+        # Log the incoming request for debugging
         raw_data = request.data.decode('utf-8').strip()
         content_type = request.content_type
         headers = dict(request.headers)
         
-        # Log everything for debugging
         print(f"\n===== INCOMING REQUEST =====")
         print(f"Content-Type: {content_type}")
         print(f"Headers: {headers}")
         print(f"Raw Data: {raw_data}")
         print(f"============================\n")
-        
-        # Try to parse the request as JSON
+
+        # Force Flask to parse JSON, regardless of Content-Type
         try:
-            data = request.get_json(force=True)  # force=True ignores Content-Type
+            data = request.get_json(force=True)
             print(f"Parsed JSON Data: {data}")
         except Exception as e:
-            print(f"JSON Parsing Error: {e}")
+            print(f"JSON Parsing Error (request.get_json): {e}")
             data = None
 
-        # If parsing JSON failed, try to manually parse the raw data
+        # Fallback to manual JSON parsing if request.get_json() failed
         if data is None:
             try:
                 data = json.loads(raw_data)  # Try to load raw data as JSON
@@ -42,11 +41,9 @@ def ask_price():
 
         # Validate the inputs
         if owner_price is None or estimated_value is None:
-            print(f"Missing owner_price or estimated_value in request body.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
 
         if not isinstance(owner_price, (int, float)) or not isinstance(estimated_value, (int, float)):
-            print(f"Invalid data types for owner_price or estimated_value.")
             return jsonify({"error": "Both 'owner_price' and 'estimated_value' must be numbers."}), 400
 
         # Determine whether to accept or not
@@ -55,7 +52,6 @@ def ask_price():
         else:
             return jsonify({"result": "accept"})
     except Exception as e:
-        print(f"Unexpected Server Error: {e}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
