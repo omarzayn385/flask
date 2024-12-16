@@ -9,16 +9,16 @@ def ask_price():
         # Get the JSON data from the POST request
         data = request.get_json()
         
-        # Extract the two numbers from the JSON data
-        first_number = data.get('first_number')
-        second_number = data.get('second_number')
+        # Ensure the data is a list or array and has exactly two numbers
+        if not isinstance(data, list) or len(data) != 2:
+            return jsonify({"error": "Request body must be a list containing exactly two numbers."}), 400
+        
+        # Extract the two numbers from the list
+        first_number, second_number = data
         
         # Validate the inputs
-        if first_number is None or second_number is None:
-            return jsonify({"error": "Both 'first_number' and 'second_number' are required."}), 400
-        
         if not isinstance(first_number, (int, float)) or not isinstance(second_number, (int, float)):
-            return jsonify({"error": "Both 'first_number' and 'second_number' must be numbers."}), 400
+            return jsonify({"error": "Both elements in the list must be numbers."}), 400
         
         # Determine whether to accept or not
         if first_number > second_number:
