@@ -38,7 +38,7 @@ def ask_price():
             except Exception as e:
                 print(f"Form Data Parsing Error: {e}")
         
-        # Step 3: Fallback - handle raw data (for when Content-Type is missing)
+        # Step 3: Fallback - handle raw data (for when Content-Type is missing or not recognized)
         if data is None and raw_data:
             try:
                 data = json.loads(raw_data)  # Manually parse raw data as JSON
