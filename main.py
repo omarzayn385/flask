@@ -31,13 +31,14 @@ def ask_price():
         # Step 2: Handle x-www-form-urlencoded
         if data is None and content_type == 'application/x-www-form-urlencoded':
             try:
-                # Get form data
+                # Get form data and convert strings to numbers (int or float)
                 data = request.form.to_dict()
+                data = {key: int(value) if value.isdigit() else float(value) for key, value in data.items()}
                 print(f"Parsed Form Data (from request.form): {data}")
             except Exception as e:
                 print(f"Form Data Parsing Error: {e}")
         
-        # Step 3: Fallback - handle raw data (this also works for text/plain)
+        # Step 3: Fallback - handle raw data (for when Content-Type is missing)
         if data is None and raw_data:
             try:
                 data = json.loads(raw_data)  # Manually parse raw data as JSON
