@@ -51,7 +51,15 @@ def ask_price():
                     print(f"request.form is empty. Trying to parse raw data as JSON.")
                     data = json.loads(raw_data)
                 else:
-                    data = {key: int(value) if value.isdigit() else float(value) for key, value in data.items()}
+                    # Attempt to convert numeric strings to int or float
+                    for key, value in data.items():
+                        if value.isdigit():
+                            data[key] = int(value)
+                        else:
+                            try:
+                                data[key] = float(value)
+                            except ValueError:
+                                pass  # Keep as string if not a number
                 print(f"Parsed Form Data (from request.form): {data}")
             except Exception as e:
                 print(f"Form Data Parsing Error: {e}")
@@ -69,13 +77,19 @@ def ask_price():
         if data is None:
             return jsonify({"error": "Request body is empty"}), 400
 
-        owner_price = data.get('owner_price')
-        estimated_value = data.get('estimated_value')
+        # Adjusted extraction to navigate into 'args'
+        args = data.get('args')
+        if not args:
+            print(f"'args' section is missing in the request body.")
+            return jsonify({"error": "'args' section is required."}), 400
+
+        owner_price = args.get('owner_price')
+        estimated_value = args.get('estimated_value')
 
         # Step 8: Validate the inputs
         if owner_price is None or estimated_value is None:
-            print(f"Missing owner_price or estimated_value in request body.")
-            return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
+            print(f"Missing owner_price or estimated_value in 'args'.")
+            return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required within 'args'."}), 400
 
         if not isinstance(owner_price, (int, float)) or not isinstance(estimated_value, (int, float)):
             print(f"Invalid data types for owner_price or estimated_value.")
@@ -91,4 +105,4 @@ def ask_price():
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
+    app.run(debug=True, port=int(os.getenv("PORT", 5000)))
