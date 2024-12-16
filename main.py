@@ -3,15 +3,25 @@ import os
 
 app = Flask(__name__)
 
-@app.route('/ask_price/<int:first_number>/<int:second_number>', methods=['POST'])
-def ask_price(first_number, second_number):
+@app.route('/ask_price', methods=['POST'])
+def ask_price():
     try:
+        # Get the JSON data from the POST request
+        data = request.get_json()
+        
+        # Extract owner_price and estimated_value from the JSON payload
+        owner_price = data.get('owner_price')
+        estimated_value = data.get('estimated_value')
+        
         # Validate the inputs
-        if not isinstance(first_number, (int, float)) or not isinstance(second_number, (int, float)):
-            return jsonify({"error": "Both elements must be numbers."}), 400
+        if owner_price is None or estimated_value is None:
+            return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
+        
+        if not isinstance(owner_price, (int, float)) or not isinstance(estimated_value, (int, float)):
+            return jsonify({"error": "Both 'owner_price' and 'estimated_value' must be numbers."}), 400
         
         # Determine whether to accept or not
-        if first_number > second_number:
+        if owner_price > estimated_value:
             return jsonify({"result": "don't accept"})
         else:
             return jsonify({"result": "accept"})
