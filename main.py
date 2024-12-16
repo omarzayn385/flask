@@ -31,7 +31,7 @@ def ask_price():
         # Step 2: Handle x-www-form-urlencoded
         if data is None and content_type == 'application/x-www-form-urlencoded':
             try:
-                # Get form data and convert strings to numbers (int or float)
+                # Get form data
                 data = request.form.to_dict()
                 if not data:
                     print(f"request.form is empty. Trying to parse raw data as JSON.")
