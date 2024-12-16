@@ -6,19 +6,22 @@ app = Flask(__name__)
 @app.route('/ask_price', methods=['POST'])
 def ask_price():
     try:
-        # Get the JSON data from the POST request
-        data = request.get_json()
+        # Get raw data from the POST request
+        raw_data = request.data.decode('utf-8').strip()
         
-        # Extract owner_price and estimated_value from the JSON payload
-        owner_price = data.get('owner_price')
-        estimated_value = data.get('estimated_value')
+        # Split the numbers by a comma, since Retell might be sending "300000,485000"
+        numbers = raw_data.split(',')
         
-        # Validate the inputs
-        if owner_price is None or estimated_value is None:
-            return jsonify({"error": "Both 'owner_price' and 'estimated_value' are required."}), 400
+        # Ensure there are exactly two numbers
+        if len(numbers) != 2:
+            return jsonify({"error": "Request body must contain exactly two numbers separated by a comma."}), 400
         
-        if not isinstance(owner_price, (int, float)) or not isinstance(estimated_value, (int, float)):
-            return jsonify({"error": "Both 'owner_price' and 'estimated_value' must be numbers."}), 400
+        # Convert the numbers to integers or floats
+        try:
+            owner_price = float(numbers[0])
+            estimated_value = float(numbers[1])
+        except ValueError:
+            return jsonify({"error": "Both elements must be numbers."}), 400
         
         # Determine whether to accept or not
         if owner_price > estimated_value:
